@@ -82,26 +82,3 @@ dependencies {
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.9.0")
 }
 
-tasks.register("ensureFaceLandmarkerModel") {
-    doLast {
-        val assetsDir = file("src/main/assets")
-        assetsDir.mkdirs()
-        val model = file("$assetsDir/face_landmarker.task")
-        if (!model.exists() || model.length() < 1000) {
-            val url =
-                java.net.URI(
-                    "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task"
-                ).toURL()
-            url.openStream().use { input ->
-                model.outputStream().use { output -> input.copyTo(output) }
-            }
-            println("Downloaded face_landmarker.task (${model.length()} bytes)")
-        } else {
-            println("face_landmarker.task already present (${model.length()} bytes)")
-        }
-    }
-}
-
-tasks.named("preBuild").configure {
-    dependsOn("ensureFaceLandmarkerModel")
-}
