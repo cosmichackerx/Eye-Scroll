@@ -39,10 +39,14 @@ jobs:
           ls -lh app/src/main/assets/face_landmarker.task
 
       - name: Assemble debug APK
-        run: gradle assembleDebug --stacktrace
+        env:
+          GRADLE_OPTS: "-Xmx4096m -Dorg.gradle.daemon=false"
+        run: gradle assembleDebug --stacktrace -Dorg.gradle.jvmargs="-Xmx4096m"
 
       - name: Assemble release APK
-        run: gradle assembleRelease --stacktrace
+        env:
+          GRADLE_OPTS: "-Xmx4096m -Dorg.gradle.daemon=false"
+        run: gradle assembleRelease --stacktrace -Dorg.gradle.jvmargs="-Xmx4096m"
 
       - name: Unit tests
         continue-on-error: true
