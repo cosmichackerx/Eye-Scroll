@@ -1,0 +1,47 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Eye Scroll</string>
+    <string name="accessibility_service_description">Eye Scroll watches your face on-device and performs swipe, tap, volume, and Home actions so you can control apps like Instagram Reels hands-free. Face video never leaves this device.</string>
+    <string name="notification_channel_name">Eye control</string>
+    <string name="notification_channel_desc">Shows while front camera is used for eye gestures</string>
+    <string name="notification_title">Eye Scroll is active</string>
+    <string name="notification_text">Face gestures control the screen. Tap Pause or Stop anytime.</string>
+    <string name="notification_paused">Detection paused</string>
+    <string name="action_pause">Pause</string>
+    <string name="action_resume">Resume</string>
+    <string name="action_stop">Stop</string>
+    <string name="action_open">Open</string>
+    <string name="onboarding_welcome_title">Eye Scroll</string>
+    <string name="onboarding_welcome_body">Control Reels, Shorts, and any app with winks and face gestures. Everything runs on your phone.</string>
+    <string name="btn_continue">Continue</string>
+    <string name="btn_skip">Skip</string>
+    <string name="btn_start_service">Start eye control</string>
+    <string name="btn_stop_service">Stop eye control</string>
+    <string name="btn_open_accessibility">Open Accessibility settings</string>
+    <string name="btn_battery">Battery unrestricted</string>
+    <string name="btn_autostart">Xiaomi autostart</string>
+    <string name="permissions_title">Permissions</string>
+    <string name="permissions_body">Camera and Accessibility are required. Notifications keep the always-on service honest and controllable.</string>
+    <string name="tutorial_title">Gesture tutorial</string>
+    <string name="home_title">Control center</string>
+    <string name="home_status_running">Service running</string>
+    <string name="home_status_paused">Detection paused</string>
+    <string name="home_status_stopped">Service stopped</string>
+    <string name="home_status_need_a11y">Enable Accessibility for Eye Scroll</string>
+    <string name="settings_gestures">Gestures</string>
+    <string name="settings_sensitivity">Sensitivity</string>
+    <string name="miui_checklist_title">Redmi / MIUI survival</string>
+    <string name="privacy_note">Privacy: face frames are processed on-device only. Nothing is uploaded.</string>
+    <string name="calib_title">Quick calibration</string>
+    <string name="calib_body">Look at the front camera. Blink left, right, then both. Flare your nostrils once.</string>
+    <string name="gesture_double_wink_right">Double wink right → next video</string>
+    <string name="gesture_double_wink_left">Double wink left → previous video</string>
+    <string name="gesture_double_both">Double blink both → Home</string>
+    <string name="gesture_nose">Nose expand → tap / pause</string>
+    <string name="gesture_vol_right">Close both, open right → volume up</string>
+    <string name="gesture_vol_left">Close both, open left → volume down</string>
+    <string name="gesture_brow">Eyebrow raise → like (double tap)</string>
+    <string name="gesture_mouth">Mouth open hold → Recents</string>
+    <string name="gesture_tilt">Head tilt → horizontal seek</string>
+    <string name="gesture_sleep">Long both-eyes close → lock (off by default)</string>
+</resources>
