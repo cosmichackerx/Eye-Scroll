@@ -7,7 +7,10 @@ import com.eyescroll.app.domain.model.GestureToggles
 import com.eyescroll.app.domain.model.GestureType
 
 /**
- * Pure Kotlin gesture recognizer. Thread-safe only if called from one worker thread.
+ * Pure Kotlin gesture recognizer. Call from a single worker thread.
+ *
+ * Wink pulse = eye was closed then opens while the other eye stays open.
+ * Both-blink pulse = both were closed then both open.
  */
 class GestureStateMachine(
     private var thresholds: GestureThresholds = GestureThresholds(),
@@ -49,18 +52,23 @@ class GestureStateMachine(
         val rightOpen = signals.eyeBlinkRight <= thresholds.blinkOpen
         val bothClosed = leftClosed && rightClosed
 
-        // Rising edge: open -> closed counts as wink/blink pulse end when releasing
-        if (lastLeftClosed && leftOpen && rightOpen) {
-            push(leftWinkTimes, t)
-        }
-        if (lastRightClosed && rightOpen && leftOpen) {
-            push(rightWinkTimes, t)
-        }
-        if (lastLeftClosed && lastRightClosed && leftOpen && rightOpen) {
+        // Pulse edges (use prior-frame closed flags before updating them)
+        val leftReleased = lastLeftClosed && leftOpen
+        val rightReleased = lastRightClosed && rightOpen
+        val bothReleased = lastLeftClosed && lastRightClosed && leftOpen && rightOpen
+
+        if (bothReleased) {
             push(bothBlinkTimes, t)
+        } else {
+            // Single-eye wink: releasing eye opens while the other is open (not a both-blink)
+            if (leftReleased && rightOpen && !lastRightClosed) {
+                push(leftWinkTimes, t)
+            }
+            if (rightReleased && leftOpen && !lastLeftClosed) {
+                push(rightWinkTimes, t)
+            }
         }
 
-        // Volume arming: both closed long enough
         if (bothClosed) {
             if (bothClosedSince == null) bothClosedSince = t
             if ((t - (bothClosedSince ?: t)) >= thresholds.volumeBothClosedMs) {
@@ -69,53 +77,47 @@ class GestureStateMachine(
             if (sleepClosedSince == null) sleepClosedSince = t
         } else {
             bothClosedSince = null
-            // Volume: both were closed, now asymmetric open
             if (volumeArmed && toggles.volume) {
                 if (rightOpen && leftClosed) {
                     volumeArmed = false
-                    fire(GestureType.VOLUME_DOWN, t)?.let {
-                        lastLeftClosed = leftClosed
-                        lastRightClosed = rightClosed
-                        return it
-                    }
-                } else if (leftOpen && rightClosed) {
+                    updateEyeState(leftClosed, rightClosed)
+                    return fire(GestureType.VOLUME_DOWN, t)
+                }
+                if (leftOpen && rightClosed) {
                     volumeArmed = false
-                    fire(GestureType.VOLUME_UP, t)?.let {
-                        lastLeftClosed = leftClosed
-                        lastRightClosed = rightClosed
-                        return it
-                    }
-                } else if (leftOpen && rightOpen) {
+                    updateEyeState(leftClosed, rightClosed)
+                    return fire(GestureType.VOLUME_UP, t)
+                }
+                if (leftOpen && rightOpen) {
                     volumeArmed = false
                 }
             }
             sleepClosedSince = null
         }
 
-        lastLeftClosed = leftClosed
-        lastRightClosed = rightClosed
+        updateEyeState(leftClosed, rightClosed)
 
         prune(leftWinkTimes, t)
         prune(rightWinkTimes, t)
         prune(bothBlinkTimes, t)
 
-        if (toggles.doubleWinkRight && rightWinkTimes.size >= 2 && leftWinkTimes.size < 2) {
-            fire(GestureType.DOUBLE_WINK_RIGHT, t)?.let {
-                rightWinkTimes.clear()
-                return it
-            }
-        }
-        if (toggles.doubleWinkLeft && leftWinkTimes.size >= 2 && rightWinkTimes.size < 2) {
-            fire(GestureType.DOUBLE_WINK_LEFT, t)?.let {
-                leftWinkTimes.clear()
-                return it
-            }
-        }
         if (toggles.doubleBlinkBoth && bothBlinkTimes.size >= 2) {
             fire(GestureType.DOUBLE_BLINK_BOTH, t)?.let {
                 bothBlinkTimes.clear()
                 leftWinkTimes.clear()
                 rightWinkTimes.clear()
+                return it
+            }
+        }
+        if (toggles.doubleWinkRight && rightWinkTimes.size >= 2) {
+            fire(GestureType.DOUBLE_WINK_RIGHT, t)?.let {
+                rightWinkTimes.clear()
+                return it
+            }
+        }
+        if (toggles.doubleWinkLeft && leftWinkTimes.size >= 2) {
+            fire(GestureType.DOUBLE_WINK_LEFT, t)?.let {
+                leftWinkTimes.clear()
                 return it
             }
         }
@@ -164,12 +166,16 @@ class GestureStateMachine(
         return null
     }
 
+    private fun updateEyeState(leftClosed: Boolean, rightClosed: Boolean) {
+        lastLeftClosed = leftClosed
+        lastRightClosed = rightClosed
+    }
+
     private fun fire(type: GestureType, t: Long): GestureCommand? {
         val last = lastFireAt[type] ?: 0L
         if (t - last < thresholds.cooldownMs) return null
-        // Global short cooldown to avoid stacked commands
         val anyLast = lastFireAt.values.maxOrNull() ?: 0L
-        if (t - anyLast < thresholds.cooldownMs / 2) return null
+        if (anyLast > 0L && t - anyLast < thresholds.cooldownMs / 2) return null
         lastFireAt[type] = t
         return GestureCommand(type, t)
     }
