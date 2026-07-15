@@ -84,10 +84,14 @@ class FaceLandmarkerHelper(
         }
 
         val blendOptional = result.faceBlendshapes()
-        val classifications: List<Classifications> =
-            if (blendOptional.isPresent) blendOptional.get() else emptyList()
-        val categories: List<Category> =
-            if (classifications.isNotEmpty()) classifications[0].categories() else emptyList()
+        @Suppress("UNCHECKED_CAST")
+        val nestedLists: List<List<Category>> =
+            if (blendOptional.isPresent) {
+                blendOptional.get() as List<List<Category>>
+            } else {
+                emptyList()
+            }
+        val categories: List<Category> = nestedLists.firstOrNull() ?: emptyList()
 
         fun score(name: String): Float {
             for (c in categories) {
